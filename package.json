@@ -1,0 +1,28 @@
+{
+  "name": "memo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "deploy": "pnpm build && edgeone makers deploy ./dist -n memo"
+  },
+  "dependencies": {
+    "pinia": "^2.3.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "postcss": "^8.5.1",
+    "postcss-px-to-viewport-8-plugin": "^1.2.5",
+    "typescript": "~5.6.3",
+    "vite": "^5.4.19",
+    "vitest": "^2.1.9",
+    "vue-tsc": "^2.2.10"
+  },
+  "packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c"
+}
