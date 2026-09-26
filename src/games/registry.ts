@@ -1,14 +1,15 @@
 import type { Component } from 'vue'
 
-export type GameId = 'matrix' | 'corsi' | 'digit' | 'stroop'
+export type GameId = 'matrix' | 'corsi' | 'digit' | 'stroop' | 'nback' | 'paired'
 
-export type Dimension = 'spatial' | 'sequence' | 'verbal' | 'reaction'
+export type Dimension = 'spatial' | 'sequence' | 'verbal' | 'reaction' | 'episodic'
 
 export const DIMENSION_LABELS: Record<Dimension, string> = {
   spatial: '空间记忆',
   sequence: '序列记忆',
   verbal: '言语记忆',
   reaction: '反应速度',
+  episodic: '情景记忆',
 }
 
 export interface GameMeta {
@@ -53,6 +54,22 @@ export const games: GameMeta[] = [
     dimension: 'reaction',
     maxLevel: 20,
     component: () => import('./stroop/Game.vue'),
+  },
+  {
+    id: 'nback',
+    name: '硬核回想',
+    tagline: '当前格子亮的位置，和 N 步前一样吗',
+    dimension: 'spatial',
+    maxLevel: 8,
+    component: () => import('./nback/Game.vue'),
+  },
+  {
+    id: 'paired',
+    name: '物归原位',
+    tagline: '记住每件东西的位置，打乱后放回去',
+    dimension: 'episodic',
+    maxLevel: 10,
+    component: () => import('./paired/Game.vue'),
   },
 ]
 

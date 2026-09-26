@@ -10,12 +10,13 @@ import {
 } from '@/components/radar'
 
 describe('components/radar', () => {
-  it('维度顺序固定为 空间/序列/言语/反应', () => {
+  it('维度顺序固定为 空间/序列/言语/反应/情景', () => {
     expect(RADAR_DIMENSIONS).toEqual([
       'spatial',
       'sequence',
       'verbal',
       'reaction',
+      'episodic',
     ])
   })
 
@@ -28,11 +29,12 @@ describe('components/radar', () => {
     expect(clampValue(Infinity)).toBe(0)
   })
 
-  it('四个轴角从正上方开始，顺时针间隔 90°', () => {
+  it('轴角从正上方开始，顺时针均分 360°', () => {
+    const step = 360 / RADAR_DIMENSIONS.length
     expect(axisAngle(0)).toBe(-90)
-    expect(axisAngle(1)).toBe(0)
-    expect(axisAngle(2)).toBe(90)
-    expect(axisAngle(3)).toBe(180)
+    RADAR_DIMENSIONS.forEach((_, i) => {
+      expect(axisAngle(i)).toBeCloseTo(-90 + i * step)
+    })
   })
 
   it('polarPoint 极坐标换算正确', () => {
@@ -46,7 +48,7 @@ describe('components/radar', () => {
 
   it('radarPolygon：全 0 时顶点都在圆心，满分时落在轴端点', () => {
     const zero = radarPolygon(
-      { spatial: 0, sequence: 0, verbal: 0, reaction: 0 },
+      { spatial: 0, sequence: 0, verbal: 0, reaction: 0, episodic: 0 },
       80,
       100,
       100,
@@ -56,38 +58,45 @@ describe('components/radar', () => {
       expect(p.y).toBeCloseTo(100)
     }
     const full = radarPolygon(
-      { spatial: 100, sequence: 100, verbal: 100, reaction: 100 },
+      { spatial: 100, sequence: 100, verbal: 100, reaction: 100, episodic: 100 },
       80,
       100,
       100,
     )
     expect(full[0].x).toBeCloseTo(100) // 上：空间
     expect(full[0].y).toBeCloseTo(20)
-    expect(full[1].x).toBeCloseTo(180) // 右：序列
-    expect(full[1].y).toBeCloseTo(100)
-    expect(full[2].x).toBeCloseTo(100) // 下：言语
-    expect(full[2].y).toBeCloseTo(180)
-    expect(full[3].x).toBeCloseTo(20) // 左：反应
-    expect(full[3].y).toBeCloseTo(100)
+    // 其余顶点按 360/N 均分落在半径 80 的圆周上
+    for (const p of full) {
+      const r = Math.hypot(p.x - 100, p.y - 100)
+      expect(r).toBeCloseTo(80)
+    }
   })
 
   it('radarPolygon：分数线性映射到半径，越界值被截断', () => {
     const pts = radarPolygon(
-      { spatial: 50, sequence: 150, verbal: -10, reaction: 25 },
+      { spatial: 50, sequence: 150, verbal: -10, reaction: 25, episodic: 75 },
       80,
       100,
       100,
     )
     expect(pts[0].y).toBeCloseTo(60) // 50 → 半径一半
-    expect(pts[1].x).toBeCloseTo(180) // 150 → 截断到满分
-    expect(pts[2].y).toBeCloseTo(100) // -10 → 截断到 0 → 圆心
-    expect(pts[3].x).toBeCloseTo(80) // 25 → 半径 20
+    const r1 = Math.hypot(pts[1].x - 100, pts[1].y - 100)
+    expect(r1).toBeCloseTo(80) // 150 → 截断到满分
+    const r2 = Math.hypot(pts[2].x - 100, pts[2].y - 100)
+    expect(r2).toBeCloseTo(0) // -10 → 截断到 0 → 圆心
+    const r3 = Math.hypot(pts[3].x - 100, pts[3].y - 100)
+    expect(r3).toBeCloseTo(20) // 25 → 半径 20
+    const r4 = Math.hypot(pts[4].x - 100, pts[4].y - 100)
+    expect(r4).toBeCloseTo(60) // 75 → 半径 60
   })
 
   it('ringPolygon 按比例生成网格环并截断 ratio', () => {
     const half = ringPolygon(0.5, 80, 100, 100)
     expect(half[0].y).toBeCloseTo(60)
-    expect(half[1].x).toBeCloseTo(140)
+    // 所有顶点落在半径 40 的圆周上
+    for (const p of half) {
+      expect(Math.hypot(p.x - 100, p.y - 100)).toBeCloseTo(40)
+    }
     expect(ringPolygon(2, 80, 100, 100)[0].y).toBeCloseTo(20)
     expect(ringPolygon(-1, 80, 100, 100)[0].y).toBeCloseTo(100)
   })

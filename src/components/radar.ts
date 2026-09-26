@@ -11,6 +11,7 @@ export const RADAR_DIMENSIONS: Dimension[] = [
   'sequence',
   'verbal',
   'reaction',
+  'episodic',
 ]
 
 /** 归一化到 0–100，非法值按 0 处理 */

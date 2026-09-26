@@ -61,22 +61,22 @@ export const useStatsStore = defineStore('stats', () => {
     )
   }
 
-  /** 四维雷达：该游戏最佳等级 / maxLevel 归一化到 0–100 */
+  /** 雷达：同一维度多个游戏取最佳，最佳等级 / maxLevel 归一化到 0–100 */
   const radar = computed<Record<Dimension, number>>(() => {
     const out = {} as Record<Dimension, number>
     for (const g of games) {
       const best = getRecord(g.id).bestLevel
-      out[g.dimension] = Math.min(100, Math.round((best / g.maxLevel) * 100))
+      const v = Math.min(100, Math.round((best / g.maxLevel) * 100))
+      out[g.dimension] = Math.max(out[g.dimension] ?? 0, v)
     }
     return out
   })
 
-  /** 综合脑力指数 = 四维平均（0–100） */
+  /** 综合脑力指数 = 各维度平均（0–100） */
   const brainIndex = computed(() => {
-    const r = radar.value
-    return Math.round(
-      (r.spatial + r.sequence + r.verbal + r.reaction) / 4,
-    )
+    const values = Object.values(radar.value)
+    if (!values.length) return 0
+    return Math.round(values.reduce((a, b) => a + b, 0) / values.length)
   })
 
   return { records, recordResult, getRecord, radar, brainIndex }
