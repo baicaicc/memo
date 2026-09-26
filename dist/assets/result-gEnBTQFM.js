@@ -1,1 +1,0 @@
-import{C as a,p as r,D as o}from"./index-KJsg8Es4.js";import{l as n,S as t,s as S}from"./stats-D36TUxhp.js";const i=a("result",()=>{const s=r(n(t.result,null));o(s,e=>S(t.result,e));function l(e){s.value=e}function u(){s.value=null}return{lastResult:s,setResult:l,clear:u}});export{i as u};

@@ -1,1 +1,0 @@
-import{d as o,g as s,B as n,n as d,a as t,_ as r}from"./index-KJsg8Es4.js";const p=o({__name:"PageContainer",props:{padded:{type:Boolean}},setup(e){return(a,c)=>(t(),s("div",{class:d(["page",{padded:e.padded!==!1}])},[n(a.$slots,"default",{},void 0)],2))}}),_=r(p,[["__scopeId","data-v-2dcce89e"]]);export{_ as P};

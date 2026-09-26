@@ -1,1 +1,0 @@
-function f(r=()=>performance.now()){let n=0,u=0,e=!1,t=!1;function a(){return t?u+(e?r()-n:0):0}return{get running(){return e},get paused(){return t&&!e},start(){t=!0,e=!0,u=0,n=r()},pause(){e&&(u+=r()-n,e=!1)},resume(){!t||e||(e=!0,n=r())},elapsed:a,remaining(s){return Math.max(0,s-a())},stop(){const s=a();return e=!1,t=!1,u=0,s}}}export{f as c};

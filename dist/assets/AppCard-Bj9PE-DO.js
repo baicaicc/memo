@@ -1,1 +1,0 @@
-import{d as s,g as c,n as o,B as l,a as r,_ as t}from"./index-KJsg8Es4.js";const n=s({__name:"AppCard",props:{clickable:{type:Boolean}},setup(a){return(e,p)=>(r(),c("div",{class:o(["card",{clickable:a.clickable}])},[l(e.$slots,"default",{},void 0)],2))}}),_=t(n,[["__scopeId","data-v-0a5ad22c"]]);export{_ as A};
