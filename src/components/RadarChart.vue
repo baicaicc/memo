@@ -52,7 +52,7 @@ const labels = computed(() =>
     class="radar"
     :viewBox="`0 0 ${SIZE} ${SIZE}`"
     role="img"
-    aria-label="四维能力雷达图"
+    aria-label="能力雷达图"
   >
     <polygon v-for="(pts, i) in rings" :key="i" class="ring" :points="pts" />
     <line

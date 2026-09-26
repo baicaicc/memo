@@ -32,9 +32,9 @@ describe('stores/stats', () => {
     expect(rec.history[29].score).toBe(6)
   })
 
-  it('雷达按最佳等级/maxLevel 归一化到 0–100，脑力指数为四维平均', () => {
+  it('雷达按最佳等级/maxLevel 归一化到 0–100，脑力指数为各维度平均', () => {
     const stats = useStatsStore()
-    expect(stats.radar).toEqual({ spatial: 0, sequence: 0, verbal: 0, reaction: 0 })
+    expect(stats.radar).toEqual({ spatial: 0, sequence: 0, verbal: 0, reaction: 0, episodic: 0 })
     expect(stats.brainIndex).toBe(0)
 
     stats.recordResult('matrix', { score: 0, level: 5 }) // maxLevel 10 → 50
@@ -42,7 +42,7 @@ describe('stores/stats', () => {
     expect(stats.radar.spatial).toBe(50)
     expect(stats.radar.verbal).toBe(50)
     expect(stats.radar.sequence).toBe(0)
-    expect(stats.brainIndex).toBe(25)
+    expect(stats.brainIndex).toBe(20)
 
     // 超过 maxLevel 时截断到 100
     stats.recordResult('stroop', { score: 0, level: 99 })
