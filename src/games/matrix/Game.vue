@@ -6,6 +6,7 @@ import { createStaircase } from '@/core/staircase'
 import { createTimer } from '@/core/timer'
 import { useGameSession } from '@/core/session'
 import { onVisibilityChange } from '@/wechat/compat'
+import { play } from '@/audio/sfx'
 import { getGame } from '@/games/registry'
 import PageContainer from '@/components/PageContainer.vue'
 import TopBar from '@/components/TopBar.vue'
@@ -140,9 +141,13 @@ function tapCell(i: number) {
       session.addScore(roundBonus(staircase.level))
       staircase.onSuccess()
       roundMessage.value = '找齐了，干得漂亮！'
+      play('levelup')
       settleRound()
+    } else {
+      play('tap')
     }
   } else {
+    play('wrong')
     session.addError()
     mistakes.value += 1
     if (mistakes.value >= MAX_MISTAKES_PER_ROUND) {
@@ -160,8 +165,10 @@ function settleRound() {
   stopTicker()
   level.value = staircase.level
   roundTimer = window.setTimeout(() => {
-    if (staircase.shouldStop) void session.finish(score.value, staircase.level)
-    else startRound()
+    if (staircase.shouldStop) {
+      play('finish')
+      void session.finish(score.value, staircase.level)
+    } else startRound()
   }, ROUND_RESULT_MS)
 }
 

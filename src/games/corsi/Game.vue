@@ -7,6 +7,7 @@ import { useGameSession } from '@/core/session'
 import { useStatsStore } from '@/stores/stats'
 import { getGame } from '@/games/registry'
 import { onVisibilityChange } from '@/wechat/compat'
+import { play } from '@/audio/sfx'
 import PageContainer from '@/components/PageContainer.vue'
 import TopBar from '@/components/TopBar.vue'
 import AppButton from '@/components/AppButton.vue'
@@ -209,6 +210,7 @@ async function onRoundSuccess() {
   syncStaircase()
   feedback.value = 'success'
   feedbackText.value = `顺序正确 +${gained} 分`
+  play('levelup')
   await wait(900)
   if (token !== runToken) return
   if (topClears.value >= 2) await finishGame()
@@ -222,6 +224,7 @@ async function onRoundFailure() {
   syncStaircase()
   feedback.value = 'fail'
   feedbackText.value = staircase.shouldStop ? '点错了，本局结束' : '点错了，降一级再来'
+  play('wrong')
   await wait(1000)
   if (token !== runToken) return
   if (staircase.shouldStop) await finishGame()
@@ -231,6 +234,7 @@ async function onRoundFailure() {
 async function finishGame() {
   cancelTimers()
   activeBlock.value = -1
+  play('finish')
   await session.finish(session.score.value, maxPassedLevel.value)
   // session.finish 不支持 detail，这里把全程最高通过长度补写进刚生成的纪录
   const latest = stats.getRecord('corsi').history[0]

@@ -6,6 +6,7 @@ import { useGameSession } from '@/core/session'
 import { createRng } from '@/core/rng'
 import { createTimer } from '@/core/timer'
 import { onVisibilityChange } from '@/wechat/compat'
+import { play } from '@/audio/sfx'
 import PageContainer from '@/components/PageContainer.vue'
 import TopBar from '@/components/TopBar.vue'
 import AppButton from '@/components/AppButton.vue'
@@ -96,6 +97,7 @@ function answer(id: string) {
   session.addScore(result.delta)
   if (!result.isRight) session.addError()
   feedback.value = result.isRight ? 'right' : 'wrong'
+  play(result.isRight ? 'tap' : 'wrong')
   feedbackTimer = setTimeout(nextTrial, FEEDBACK_MS)
 }
 
@@ -103,6 +105,7 @@ async function endGame() {
   if (rafId !== undefined) cancelAnimationFrame(rafId)
   if (feedbackTimer !== undefined) clearTimeout(feedbackTimer)
   timer.stop()
+  play('finish')
   await session.finish()
 }
 

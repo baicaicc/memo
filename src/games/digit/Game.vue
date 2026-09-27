@@ -7,6 +7,7 @@ import { createRng } from '@/core/rng'
 import { createStaircase } from '@/core/staircase'
 import { createTimer } from '@/core/timer'
 import { onVisibilityChange } from '@/wechat/compat'
+import { play } from '@/audio/sfx'
 import { useStatsStore } from '@/stores/stats'
 import { useResultStore } from '@/stores/result'
 import PageContainer from '@/components/PageContainer.vue'
@@ -134,10 +135,12 @@ function pressConfirm() {
     maxSpan.value = Math.max(maxSpan.value, len)
     staircase.onSuccess()
     feedback.value = 'ok'
+    play('levelup')
   } else {
     session.addError()
     staircase.onFailure()
     feedback.value = 'bad'
+    play('wrong')
   }
   currentLevel.value = staircase.level
   peakLevel.value = Math.max(peakLevel.value, staircase.level)
@@ -152,6 +155,7 @@ function pressConfirm() {
 
 async function endGame() {
   cancelAnimationFrame(rafId)
+  play('finish')
   const done = session.finish(score.value, peakLevel.value)
   // session.finish 不透传 detail，这里把 maxSpan 补进刚写入的纪录与结算
   const rec = stats.getRecord(GAME_ID)
