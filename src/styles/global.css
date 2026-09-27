@@ -59,6 +59,48 @@ body {
   min-height: 100dvh;
 }
 
+:root {
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* 路由切换：轻量淡入上移（仅进入，无退出，避免布局跳动） */
+.page-enter-active {
+  transition:
+    opacity 0.18s var(--ease-out),
+    transform 0.18s var(--ease-out);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-rise {
+  animation: rise-in 0.22s var(--ease-out) both;
+}
+
+/* 用户偏好减少动态时，全局压平所有动画与过渡 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 a {
   color: var(--color-primary);
   text-decoration: none;

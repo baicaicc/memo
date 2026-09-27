@@ -80,7 +80,7 @@ function replay() {
   <PageContainer>
     <TopBar title="本局结算" />
     <div v-if="result && meta" class="body">
-      <AppCard v-if="outcome && rivalScore !== null" class="vs-card" :class="outcome">
+      <AppCard v-if="outcome && rivalScore !== null" class="vs-card anim-rise" :class="outcome">
         <div class="vs-scores">
           <span>你 {{ result.score }} 分</span>
           <span class="vs-divider">vs</span>
@@ -194,6 +194,21 @@ function replay() {
   margin-top: 10px;
   color: var(--color-success);
   font-weight: 600;
+  animation: record-pop 0.4s var(--ease-out);
+}
+
+@keyframes record-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  55% {
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .best-row {
