@@ -259,9 +259,9 @@ async function endRound(token: number) {
   const n = currentN.value
   const j = judgeRound(stimuli.value, pressed.value, n)
   maxN.value = Math.max(maxN.value, n)
-  const outcome = roundOutcome(j.correctRate)
+  const outcome = roundOutcome(j.dPrime)
   if (outcome === 'down') demotions.value += 1
-  const next = nextN(j.correctRate, n)
+  const next = nextN(j.dPrime, n)
   currentN.value = next
   session.level.value = next
   const pct = Math.round(j.correctRate * 100)

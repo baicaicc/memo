@@ -92,6 +92,12 @@ export interface RoundJudgement {
   mistakes: number
   /** 正确率 = correct / judged */
   correctRate: number
+  /** 敏感度 d'（信号检测量）：命中率与虚报率的 z 分差，防「全程不操作躺分」 */
+  dPrime: number
+  hits: number
+  misses: number
+  falseAlarms: number
+  correctRejections: number
   /** 本局得分增量合计 */
   scoreDelta: number
   /** 逐拍判定（仅可判定拍，与 stimuli[n..] 对齐） */
@@ -114,28 +120,76 @@ export function judgeRound(
   const correct = trials.filter((t) => t.correct).length
   const mistakes = trials.length - correct
   const scoreDelta = trials.reduce((sum, t) => sum + t.delta, 0)
+  const hits = trials.filter((t) => t.kind === 'hit').length
+  const misses = trials.filter((t) => t.kind === 'miss').length
+  const falseAlarms = trials.filter((t) => t.kind === 'falseAlarm').length
+  const correctRejections = trials.filter((t) => t.kind === 'correctReject').length
   return {
     judged: trials.length,
     correct,
     mistakes,
     correctRate: trials.length === 0 ? 0 : correct / trials.length,
+    dPrime: dPrime(hits, misses, falseAlarms, correctRejections),
+    hits,
+    misses,
+    falseAlarms,
+    correctRejections,
     scoreDelta,
     trials,
   }
 }
 
+/**
+ * 标准正态分布的反函数（分位函数），Acklam 算法，|误差| < 1.15e-9。
+ * 用于把命中率/虚报率换算成 z 分。
+ */
+export function probit(p: number): number {
+  if (!Number.isFinite(p) || p <= 0 || p >= 1) throw new RangeError(`probit: p=${p} 必须在 (0,1) 开区间`)
+  const a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2, -3.066479806614716e1, 2.506628277459239]
+  const b = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1, -1.328068155288572e1]
+  const c = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783]
+  const d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416]
+  const pLow = 0.02425
+  let q: number
+  let r: number
+  if (p < pLow) {
+    q = Math.sqrt(-2 * Math.log(p))
+    return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1)
+  }
+  if (p <= 1 - pLow) {
+    q = p - 0.5
+    r = q * q
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1)
+  }
+  q = Math.sqrt(-2 * Math.log(1 - p))
+  return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1)
+}
+
+/**
+ * 信号检测论 d'（log-linear 校正：0 命中/0 虚报用 0.5 平滑，避免 ±∞）。
+ * 全程不操作 → 命中率极低 → d' 为负，无法靠「正确放过」躺分。
+ */
+export function dPrime(hits: number, misses: number, falseAlarms: number, correctRejections: number): number {
+  const hitRate = (hits + 0.5) / (hits + misses + 1)
+  const faRate = (falseAlarms + 0.5) / (falseAlarms + correctRejections + 1)
+  return probit(hitRate) - probit(faRate)
+}
+
 export type RoundOutcome = 'up' | 'stay' | 'down'
 
-/** 升降级规则：正确率 ≥80% 升级，<50% 降级，其间保持 */
-export function roundOutcome(correctRate: number): RoundOutcome {
-  if (correctRate >= 0.8) return 'up'
-  if (correctRate < 0.5) return 'down'
+/** 升降级规则（按敏感度 d'，而非正确率）：d' ≥1.5 升级，<0.5 降级，其间保持 */
+export const UP_THRESHOLD = 1.5
+export const DOWN_THRESHOLD = 0.5
+
+export function roundOutcome(dp: number): RoundOutcome {
+  if (dp >= UP_THRESHOLD) return 'up'
+  if (dp < DOWN_THRESHOLD) return 'down'
   return 'stay'
 }
 
 /** 下一局的 N（封顶 MAX_N，保底 MIN_N） */
-export function nextN(correctRate: number, currentN: number): number {
-  switch (roundOutcome(correctRate)) {
+export function nextN(dp: number, currentN: number): number {
+  switch (roundOutcome(dp)) {
     case 'up':
       return Math.min(currentN + 1, MAX_N)
     case 'down':

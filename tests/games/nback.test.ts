@@ -13,6 +13,10 @@ import {
   judgeTrial,
   nextN,
   roundOutcome,
+  probit,
+  dPrime,
+  DOWN_THRESHOLD,
+  UP_THRESHOLD,
   roundTrialCount,
 } from '@/games/nback/logic'
 
@@ -122,15 +126,15 @@ describe('games/nback logic', () => {
   })
 
   it('升降级规则边界：≥80% 升，50–80% 保持，<50% 降', () => {
-    expect(roundOutcome(0.8)).toBe('up')
-    expect(roundOutcome(1)).toBe('up')
-    expect(roundOutcome(0.79)).toBe('stay')
+    expect(roundOutcome(1.5)).toBe('up')
+    expect(roundOutcome(3)).toBe('up')
+    expect(roundOutcome(1.49)).toBe('stay')
     expect(roundOutcome(0.5)).toBe('stay')
     expect(roundOutcome(0.49)).toBe('down')
-    expect(roundOutcome(0)).toBe('down')
+    expect(roundOutcome(-2)).toBe('down')
 
-    expect(nextN(0.8, 2)).toBe(3)
-    expect(nextN(0.6, 2)).toBe(2)
+    expect(nextN(1.5, 2)).toBe(3)
+    expect(nextN(1, 2)).toBe(2)
     expect(nextN(0.4, 2)).toBe(1)
     // 封顶与保底
     expect(nextN(1, MAX_N)).toBe(MAX_N)
@@ -145,5 +149,45 @@ describe('games/nback logic', () => {
     expect(judgeTrial(false, false, MAX_N).delta).toBe(80)
     expect(judgeTrial(true, false, MAX_N).delta).toBe(-5)
     expect(judgeTrial(false, true, 1).delta).toBe(-5)
+  })
+})
+
+describe('nback d\' 记分（防挂机，MEMO 反馈）', () => {
+  it('probit 与标准正态分位数一致（±0.01）', () => {
+    expect(probit(0.5)).toBeCloseTo(0, 6)
+    expect(probit(0.8413)).toBeCloseTo(1, 2)
+    expect(probit(0.9772)).toBeCloseTo(2, 2)
+    expect(probit(0.0228)).toBeCloseTo(-2, 2)
+  })
+
+  it('全程不操作（正确放过全部非匹配）d\' 为负 → 必降级，无法躺分', () => {
+    // 20 判定拍、6 匹配：命中 0、漏报 6、错点 0、正确放过 14
+    const dp = dPrime(0, 6, 0, 14)
+    expect(dp).toBeLessThan(DOWN_THRESHOLD)
+    expect(roundOutcome(dp)).toBe('down')
+  })
+
+  it('完美表现 d\' 很高 → 升级', () => {
+    const dp = dPrime(6, 0, 0, 14)
+    expect(dp).toBeGreaterThan(UP_THRESHOLD)
+    expect(roundOutcome(dp)).toBe('up')
+  })
+
+  it('乱按（全部虚报）同样 d\' 为负', () => {
+    const dp = dPrime(0, 6, 14, 0)
+    expect(roundOutcome(dp)).toBe('down')
+  })
+
+  it('judgeRound 输出四分类计数与 d\'', () => {
+    const rng = createRng('dp-round')
+    const stimuli = generateStimuli(rng, 2)
+    const pressed = stimuli.map((s) => s.isMatch) // 全部按对（命中），非匹配全不按
+    const j = judgeRound(stimuli, pressed, 2)
+    expect(j.judged).toBe(20)
+    expect(j.hits).toBe(6)
+    expect(j.misses).toBe(0)
+    expect(j.falseAlarms).toBe(0)
+    expect(j.correctRejections).toBe(14)
+    expect(j.dPrime).toBeGreaterThan(UP_THRESHOLD)
   })
 })
