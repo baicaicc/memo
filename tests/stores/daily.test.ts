@@ -35,6 +35,20 @@ describe('stores/daily', () => {
     expect(daily.allDone).toBe(false)
   })
 
+  it('nextPending：指向第一个未完成任务，全完成后为 null', () => {
+    const daily = useDailyStore()
+    const now = day('2026-09-26')
+    daily.ensureToday(now)
+    const ids = daily.tasks.map((t) => t.gameId)
+    expect(daily.nextPending).toBe(ids[0])
+    daily.recordPlay(ids[0], now)
+    expect(daily.nextPending).toBe(ids[1])
+    daily.recordPlay(ids[1], now)
+    daily.recordPlay(ids[2], now)
+    expect(daily.nextPending).toBeNull()
+    expect(daily.allDone).toBe(true)
+  })
+
   it('streak：首玩为 1，连续天 +1，同日重复不变', () => {
     const daily = useDailyStore()
     daily.recordPlay('matrix', day('2026-09-25'))

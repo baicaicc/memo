@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { isMuted, toggleMuted } from '@/audio/sfx'
-import { games, DIMENSION_LABELS } from '@/games/registry'
+import { games, DIMENSION_LABELS, type GameId } from '@/games/registry'
 import { useStatsStore } from '@/stores/stats'
 import { useDailyStore } from '@/stores/daily'
 import PageContainer from '@/components/PageContainer.vue'
 import AppCard from '@/components/AppCard.vue'
+import AppButton from '@/components/AppButton.vue'
 
 const router = useRouter()
 const stats = useStatsStore()
@@ -21,6 +22,14 @@ onMounted(() => daily.ensureToday())
 
 function gameName(id: string) {
   return games.find((g) => g.id === id)?.name ?? id
+}
+
+const nextPending = computed(() => daily.nextPending)
+const allDone = computed(() => daily.allDone)
+
+function startDaily() {
+  const next = daily.nextPending
+  if (next) void router.push({ path: `/play/${next}`, query: { flow: 'daily' } })
 }
 </script>
 
@@ -47,6 +56,9 @@ function gameName(id: string) {
           玩 1 局「{{ gameName(task.gameId) }}」
         </li>
       </ul>
+      <AppButton class="daily-btn" @click="startDaily">
+        {{ allDone ? '今日已完成 · 再来一轮' : nextPending ? `开始今日训练：${gameName(nextPending as GameId)}` : '开始今日训练' }}
+      </AppButton>
     </AppCard>
 
     <h2 class="section-title games-title">开始训练</h2>
@@ -102,6 +114,10 @@ function gameName(id: string) {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 10px;
+}
+
+.daily-btn {
+  margin-top: 12px;
 }
 
 .task-list {
