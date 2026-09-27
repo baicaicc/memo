@@ -6,6 +6,7 @@ import { createStaircase } from '@/core/staircase'
 import { createTimer } from '@/core/timer'
 import { useGameSession } from '@/core/session'
 import { onVisibilityChange } from '@/wechat/compat'
+import { play } from '@/audio/sfx'
 import { getGame } from '@/games/registry'
 import PageContainer from '@/components/PageContainer.vue'
 import TopBar from '@/components/TopBar.vue'
@@ -161,6 +162,7 @@ function judgeRound() {
   judged.value = verdict
   for (let i = 0; i < verdict.wrongItems.length; i++) session.addError()
   if (verdict.correct > 0) session.addScore(scorePerItem(roundLevel) * verdict.correct)
+  play(verdict.allCorrect ? 'levelup' : 'wrong')
   if (verdict.allCorrect) {
     session.addScore(roundBonus(roundLevel))
     bestLevel.value = Math.max(bestLevel.value, roundLevel)
@@ -180,8 +182,10 @@ function settleRound() {
   stopTicker()
   level.value = staircase.level
   roundTimer = window.setTimeout(() => {
-    if (staircase.shouldStop) void session.finish(score.value, bestLevel.value)
-    else startRound()
+    if (staircase.shouldStop) {
+      play('finish')
+      void session.finish(score.value, bestLevel.value)
+    } else startRound()
   }, ROUND_RESULT_MS)
 }
 

@@ -5,6 +5,7 @@ import { createRng } from '@/core/rng'
 import { useGameSession } from '@/core/session'
 import { getGame } from '@/games/registry'
 import { onVisibilityChange } from '@/wechat/compat'
+import { play } from '@/audio/sfx'
 import PageContainer from '@/components/PageContainer.vue'
 import TopBar from '@/components/TopBar.vue'
 import AppButton from '@/components/AppButton.vue'
@@ -231,10 +232,12 @@ function tapSame() {
   if (j.correct) {
     flash('success', `判断正确 +${j.delta}`)
     pulseButton('ok')
+    play('tap')
   } else {
     session.addError()
     flash('fail', `错点了 · 这拍和 ${n} 步前不同（-${PENALTY_PER_MISTAKE}）`)
     pulseButton('bad')
+    play('wrong')
   }
 }
 
@@ -267,6 +270,7 @@ async function endRound(token: number) {
   const done = roundNum.value >= MAX_ROUNDS || demotions.value >= MAX_DEMOTES
   summaryText.value = `第 ${roundNum.value} 局正确率 ${pct}% · ${done ? '本盘结束' : action}`
   feedback.value = outcome === 'down' ? 'fail' : 'success'
+  play(outcome === 'up' ? 'levelup' : outcome === 'down' ? 'degrade' : 'tap')
   await wait(1700)
   if (token !== runToken) return
   if (done) await finishGame()
@@ -276,6 +280,7 @@ async function endRound(token: number) {
 async function finishGame() {
   cancelTimers()
   activeCell.value = -1
+  play('finish')
   await session.finish(session.score.value, maxN.value)
 }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { isMuted, toggleMuted } from '@/audio/sfx'
 import { games, DIMENSION_LABELS } from '@/games/registry'
 import { useStatsStore } from '@/stores/stats'
 import { useDailyStore } from '@/stores/daily'
@@ -10,6 +11,11 @@ import AppCard from '@/components/AppCard.vue'
 const router = useRouter()
 const stats = useStatsStore()
 const daily = useDailyStore()
+const muted = ref(isMuted())
+
+function flipMute() {
+  muted.value = toggleMuted()
+}
 
 onMounted(() => daily.ensureToday())
 
@@ -25,6 +31,9 @@ function gameName(id: string) {
       <div class="chips">
         <span class="chip">🔥 连续 {{ daily.streak }} 天</span>
         <span class="chip">🧠 脑力指数 {{ stats.brainIndex }}</span>
+        <button class="chip mute" :aria-label="muted ? '开启音效' : '关闭音效'" @click="flipMute">
+          {{ muted ? '🔇' : '🔊' }}
+        </button>
       </div>
     </header>
 
@@ -81,6 +90,12 @@ function gameName(id: string) {
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 14px;
+}
+
+.mute {
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--color-text);
 }
 
 .section-title {
