@@ -133,6 +133,19 @@ function gameName(id: string) {
 .check.done {
   background: var(--color-success);
   border-color: var(--color-success);
+  animation: check-pop 0.25s var(--ease-out);
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .games-title {
@@ -143,6 +156,30 @@ function gameName(id: string) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.grid > * {
+  animation: rise-in 0.22s var(--ease-out) both;
+}
+
+.grid > *:nth-child(2) {
+  animation-delay: 0.03s;
+}
+
+.grid > *:nth-child(3) {
+  animation-delay: 0.06s;
+}
+
+.grid > *:nth-child(4) {
+  animation-delay: 0.09s;
+}
+
+.grid > *:nth-child(5) {
+  animation-delay: 0.12s;
+}
+
+.grid > *:nth-child(6) {
+  animation-delay: 0.15s;
 }
 
 .game-card {

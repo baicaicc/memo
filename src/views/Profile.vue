@@ -47,7 +47,7 @@ function barHeight(score: number, max: number): string {
       <AppCard class="hero">
         <div class="hero-label">脑力指数</div>
         <div class="hero-value">{{ stats.brainIndex }}</div>
-        <div class="hero-sub">四维能力综合评估</div>
+        <div class="hero-sub">各项能力综合评估</div>
       </AppCard>
 
       <AppCard class="radar-card">
@@ -89,6 +89,28 @@ function barHeight(score: number, max: number): string {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.hero,
+.radar-card,
+.game-card {
+  animation: rise-in 0.22s var(--ease-out) both;
+}
+
+.game-card:nth-of-type(2) {
+  animation-delay: 0.04s;
+}
+
+.game-card:nth-of-type(3) {
+  animation-delay: 0.08s;
+}
+
+.game-card:nth-of-type(4) {
+  animation-delay: 0.12s;
+}
+
+.game-card:nth-of-type(5) {
+  animation-delay: 0.16s;
 }
 
 .hero {
