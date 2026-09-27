@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { getGame } from '@/games/registry'
 import { useResultStore } from '@/stores/result'
 import { useStatsStore } from '@/stores/stats'
+import { useDailyStore } from '@/stores/daily'
 import { judgeOutcome, takeRivalPayload, type ChallengeOutcome } from './Challenge.vue'
 import PageContainer from '@/components/PageContainer.vue'
 import TopBar from '@/components/TopBar.vue'
@@ -14,8 +15,18 @@ const route = useRoute()
 const router = useRouter()
 const resultStore = useResultStore()
 const stats = useStatsStore()
+const daily = useDailyStore()
 
 const result = computed(() => resultStore.lastResult)
+
+// 今日训练流：刚结束的一局属于今日任务时，展示「下一局」与完成态
+const inDailyFlow = computed(() => {
+  const r = result.value
+  return Boolean(r && daily.tasks.some((t) => t.gameId === r.gameId))
+})
+const nextGameId = computed(() => (inDailyFlow.value ? daily.nextPending : null))
+const dailyCompleted = computed(() => inDailyFlow.value && daily.allDone)
+const doneCount = computed(() => daily.tasks.filter((t) => t.done).length)
 const meta = computed(() => (result.value ? getGame(result.value.gameId) : undefined))
 const record = computed(() =>
   result.value ? stats.getRecord(result.value.gameId) : null,
@@ -71,8 +82,13 @@ async function copyChallenge() {
   showToast('已复制')
 }
 
-function replay() {
-  if (result.value) router.push(`/play/${result.value.gameId}`)
+function replay(next?: string | null) {
+  const target = next ?? result.value?.gameId
+  if (target) router.push(`/play/${target}`)
+}
+
+function gameName(id: string) {
+  return getGame(id)?.name ?? id
 }
 </script>
 
@@ -107,8 +123,15 @@ function replay() {
         </div>
       </AppCard>
 
+      <div v-if="dailyCompleted" class="daily-done anim-rise">
+        🎉 今日训练完成！已连续 {{ daily.streak }} 天
+      </div>
+
       <div class="actions">
-        <AppButton block @click="replay">再来一局</AppButton>
+        <AppButton v-if="nextGameId" block @click="replay(nextGameId)">
+          下一局 · {{ gameName(nextGameId) }}（今日 {{ doneCount }}/3）
+        </AppButton>
+        <AppButton v-else block @click="replay()">再来一局</AppButton>
         <AppButton block variant="ghost" @click="copyChallenge">复制挑战链接</AppButton>
         <AppButton block variant="ghost" @click="router.push('/')">回首页</AppButton>
       </div>
@@ -130,6 +153,16 @@ function replay() {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.daily-done {
+  text-align: center;
+  padding: 12px;
+  border-radius: var(--radius-m);
+  background: var(--color-card);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+  font-weight: 600;
 }
 
 .vs-card {

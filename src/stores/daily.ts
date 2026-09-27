@@ -75,6 +75,8 @@ export const useDailyStore = defineStore('daily', () => {
   const allDone = computed(
     () => state.value.tasks.length > 0 && state.value.tasks.every((t) => t.done),
   )
+  /** 今日流程里第一个未完成的游戏；全部完成返回 null（「一键今日训练」用） */
+  const nextPending = computed(() => state.value.tasks.find((t) => !t.done)?.gameId ?? null)
 
-  return { state, tasks, streak, allDone, ensureToday, recordPlay }
+  return { state, tasks, streak, allDone, nextPending, ensureToday, recordPlay }
 })
