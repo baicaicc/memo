@@ -26,7 +26,7 @@
 
 - `corepack pnpm test`（Vitest，纯逻辑单测）
 - `corepack pnpm build`（vue-tsc 类型检查 + vite 构建）
-- Node 用 nvm 的 v20：`export PATH="$HOME/.nvm/versions/node/v20.18.1/bin:$PATH"`
+- Node.js 版本参考 [CI 配置](.github/workflows/deploy.yml)；本机使用已有版本管理器，不固定安装路径。
 
 ## 部署档位
 
