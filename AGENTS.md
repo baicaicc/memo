@@ -1,4 +1,4 @@
-遵循 dev-conventions CONSTITUTION v1.3（2026-09-12）。例外清单见文末。
+跨项目协作遵循 [dev-conventions 当前有效主分支](https://github.com/baicaicc/dev-conventions/blob/main/CONSTITUTION.md)。本机正本为 `/Users/kidsbox/workspace/dev-conventions/CONSTITUTION.md`；先读该正本，并按其入口读取同仓 `ADAPTATIONS.md`。本项目例外见文末。
 
 # memo 工程宪法
 
