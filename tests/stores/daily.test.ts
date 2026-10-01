@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useDailyStore, formatDate } from '@/stores/daily'
+import { useStatsStore } from '@/stores/stats'
+import { games } from '@/games/registry'
 
 function day(s: string): Date {
   return new Date(`${s}T12:00:00`)
@@ -23,6 +25,18 @@ describe('stores/daily', () => {
     const daily2 = useDailyStore()
     daily2.ensureToday(day('2026-09-26'))
     expect(daily2.tasks.map((t) => t.gameId)).toEqual(first)
+  })
+
+  it('第一个任务是当天最弱的游戏', () => {
+    const stats = useStatsStore()
+    for (const g of games) {
+      if (g.id !== 'paired') stats.recordResult(g.id, { score: 1, level: g.maxLevel }, day('2026-09-25').getTime())
+    }
+    stats.recordResult('paired', { score: 1, level: 1 }, day('2026-09-25').getTime())
+    const daily = useDailyStore()
+    daily.ensureToday(day('2026-09-26'))
+    expect(daily.tasks[0].gameId).toBe('paired')
+    expect(new Set(daily.tasks.map((t) => t.gameId)).size).toBe(3)
   })
 
   it('recordPlay 勾选对应任务', () => {

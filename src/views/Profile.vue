@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { DIMENSION_LABELS, games } from '@/games/registry'
+import { dailyBestLevels, gameProgress } from '@/core/progress'
 import { useDailyStore } from '@/stores/daily'
 import { useStatsStore } from '@/stores/stats'
 import AppButton from '@/components/AppButton.vue'
@@ -9,6 +10,8 @@ import AppCard from '@/components/AppCard.vue'
 import PageContainer from '@/components/PageContainer.vue'
 import RadarChart from '@/components/RadarChart.vue'
 import CloudCard from '@/components/CloudCard.vue'
+import LevelTrend from '@/components/LevelTrend.vue'
+import WeeklyCard from '@/components/WeeklyCard.vue'
 import TopBar from '@/components/TopBar.vue'
 
 const router = useRouter()
@@ -19,21 +22,22 @@ const hasData = computed(() =>
   games.some((g) => stats.getRecord(g.id).history.length > 0),
 )
 
-const TREND_LIMIT = 30
-
-const cards = computed(() =>
-  games.map((meta) => {
+// 看等级不看得分：得分受难度影响，等级越高单局分数反而可能更低
+const cards = computed(() => {
+  const now = new Date()
+  return games.map((meta) => {
     const rec = stats.getRecord(meta.id)
-    // history 新的在前；趋势只画最近 30 局，翻转为左旧右新
-    const trend = rec.history.slice(0, TREND_LIMIT).reverse()
-    const max = trend.reduce((m, h) => Math.max(m, h.score), 0)
-    return { meta, rec, trend, max }
-  }),
-)
+    const points = dailyBestLevels(rec.history, now)
+    const played = points.some((p) => p.level !== null)
+    return { meta, rec, points, played, delta: gameProgress(rec.history, now).delta }
+  })
+})
 
-function barHeight(score: number, max: number): string {
-  if (max <= 0) return '8%'
-  return `${Math.max(8, Math.round((score / max) * 100))}%`
+function deltaText(delta: number | null): string {
+  if (delta === null) return ''
+  if (delta > 0) return `近 7 天 ↑${delta} 级`
+  if (delta < 0) return `近 7 天 ↓${-delta} 级`
+  return '近 7 天 持平'
 }
 </script>
 
@@ -54,6 +58,8 @@ function barHeight(score: number, max: number): string {
         <div class="hero-sub">各项能力综合评估</div>
       </AppCard>
 
+      <WeeklyCard />
+
       <AppCard class="radar-card">
         <RadarChart :values="stats.radar" />
       </AppCard>
@@ -67,22 +73,13 @@ function barHeight(score: number, max: number): string {
             <div class="game-dim">{{ DIMENSION_LABELS[c.meta.dimension] }}</div>
           </div>
           <div class="bests">
-            <div>最高分 <b>{{ c.rec.bestScore }}</b></div>
             <div>最高等级 <b>Lv.{{ c.rec.bestLevel }}</b></div>
+            <div>最高分 <b>{{ c.rec.bestScore }}</b></div>
+            <div v-if="c.delta !== null" class="delta" :class="{ up: c.delta > 0 }">{{ deltaText(c.delta) }}</div>
           </div>
         </div>
-        <template v-if="c.trend.length">
-          <div class="bars">
-            <div
-              v-for="(h, i) in c.trend"
-              :key="`${h.at}-${i}`"
-              class="bar"
-              :style="{ height: barHeight(h.score, c.max) }"
-            />
-          </div>
-          <div class="trend-caption">最近 {{ c.trend.length }} 局得分趋势</div>
-        </template>
-        <div v-else class="trend-empty">暂无成绩</div>
+        <LevelTrend v-if="c.played" :points="c.points" />
+        <div v-else class="trend-empty">{{ c.rec.history.length ? '近 14 天没练过' : '暂无成绩' }}</div>
       </AppCard>
 
       <div class="streak">🔥 已连续训练 {{ daily.streak }} 天</div>
@@ -168,32 +165,18 @@ function barHeight(score: number, max: number): string {
   color: var(--color-text);
 }
 
-.bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 44px;
-  margin-top: 14px;
-}
-
-.bar {
-  flex: 1;
-  min-width: 0;
-  background: var(--color-primary);
-  border-radius: 2px 2px 0 0;
-  opacity: 0.8;
-}
-
-.bar:last-child {
-  background: var(--color-accent);
-  opacity: 1;
-}
-
-.trend-caption {
-  margin-top: 6px;
+.delta {
+  margin-top: 2px;
   font-size: 12px;
-  color: var(--color-text-dim);
 }
+
+.delta.up {
+  color: var(--color-success);
+}
+
+
+
+
 
 .trend-empty {
   margin-top: 14px;
