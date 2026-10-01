@@ -2,7 +2,7 @@
 
 # memo 工程宪法
 
-个人记忆训练 H5 小游戏合集：微信内打开即玩，单局 60–90 秒、阶梯难度、本地纪录。当前为纯前端自用项目，长期会演进出服务端（成绩/反馈记录）与 AI 教练（题目分析、难度建议）。仓库公开，不存放任何凭据与私人数据。
+个人记忆训练 H5 小游戏合集：微信内打开即玩，单局 60–90 秒、阶梯难度、本地纪录 + 云端存档（恢复码找回）。自用项目，长期会演进出 AI 教练（题目分析、难度建议）。仓库公开，不存放任何凭据与私人数据。
 
 ## 先读顺序
 
@@ -12,7 +12,7 @@
 
 ## 项目边界
 
-- **管**：四个记忆游戏（matrix/corsi/digit/stroop）与后续新游戏、阶梯难度引擎、本地档案（雷达图/每日任务/streak）、挑战链接、部署流水线。
+- **管**：六个记忆游戏（matrix/corsi/digit/stroop/nback/paired）与后续新游戏、阶梯难度引擎、本地档案（雷达图/每日任务/streak）、云端存档、挑战链接、部署流水线。
 - **不管**：umbrella 外壳（未接入，需要时单独立卡评估）、其他产品项目。
 - 需求账本 = 本仓 GitHub Issues，编号回执 `MEMO-<n>`。
 
@@ -21,26 +21,27 @@
 - `src/games/<id>/`：每游戏一个目录，组件 + 纯逻辑分离；**出题的一切随机必须走 `core/rng.ts` 的 `createRng(seed)`**（挑战链接靠种子复现同题，这是契约）。
 - `src/core/`：rng / staircase / timer / session，游戏共用的纯 TS 层，改它等于改所有游戏的契约。
 - 计时一律 `performance.now()` 时间差（`core/timer.ts`），禁用定时器累加；切后台经 `onVisibilityChange` 暂停。
+- 云端存档：`src/sync/profile.ts`（档案结构、恢复码、合并规则，前后端共用）→ `stores/sync.ts`（启动与每局结算后同步）→ `server/api/*.ts`（构建时打包成 `dist/cloud-functions/api/*.js`，EdgeOne Makers Cloud Functions + Blob 存储，命名空间 `memo-profiles`）。
 
 ## 验证命令
 
-- `corepack pnpm test`（Vitest，纯逻辑单测）
-- `corepack pnpm build`（vue-tsc 类型检查 + vite 构建）
+- `pnpm test`（Vitest，纯逻辑单测）
+- `pnpm build`（vue-tsc 类型检查 + vite 构建 + 打包云函数）
 - Node.js 版本参考 [CI 配置](.github/workflows/deploy.yml)；本机使用已有版本管理器，不固定安装路径。
 
 ## 部署档位
 
-T1 云产品（轻量变体）：GitHub Actions CI/CD + EdgeOne Pages 单环境。合入 main 即自动发布到 `https://memo.sesamebox.cn`，合入与发布均 Agent 自主。发布凭证只存 GitHub Secrets，不进库。
+T1 云产品（轻量变体）：GitHub Actions CI/CD + EdgeOne Pages 单环境。合入 main 即自动发布到 `https://memo.sesamebox.cn`，合入与发布均 Agent 自主。发布凭证只存 GitHub Secrets，不进库。Blob 存储由函数运行时自动鉴权，无需额外凭证；预览环境与线上共用同一份存储。
 
 ## 项目特有规则
 
 1. 游戏逻辑与视图分离：`games/*/logic.ts` 为纯函数并配单测；新游戏必须带同种子复现测试。
-2. 无后端阶段，所有状态存 localStorage；引入服务端/AI 能力前先在 Issue 里过方案。
+2. 本机 localStorage 为主、云端存档为备份与跨设备：同步失败不能影响游玩。改档案结构须升 `PROFILE_VERSION` 并保证合并规则可交换、幂等；新增服务端/AI 能力前先在 Issue 里过方案。
 3. 面向大众用户：玩法零文字门槛，新游戏须评估 18–60 岁全年龄可玩性。
 
 ## 例外清单
 
 | 宪法条款 | 本项目例外 | 理由 |
 | --- | --- | --- |
-| 6.1 单一运行时副本 | 不适用 | 纯静态托管（EdgeOne Pages），无本机运行时与常驻进程；部署 = CI 自动完成 |
+| 6.1 单一运行时副本 | 不适用 | 静态托管 + 平台托管的云函数（EdgeOne Makers），无本机运行时与常驻进程；部署 = CI 自动完成 |
 | 第 6 节 T1 双环境 | 单环境 | 自用项目，无 dev/prod 分离需求；需要时升级 |

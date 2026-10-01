@@ -2,6 +2,7 @@ import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { games, type Dimension, type GameId } from '@/games/registry'
 import { loadJSON, saveJSON, STORAGE_KEYS } from './persist'
+import { HISTORY_LIMIT } from '@/sync/profile'
 
 export interface HistoryEntry {
   score: number
@@ -30,7 +31,6 @@ export interface RecordResultOutcome {
   isBestLevel: boolean
 }
 
-const HISTORY_LIMIT = 200
 
 type StatsState = Record<string, GameRecord>
 

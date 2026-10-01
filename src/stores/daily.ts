@@ -9,7 +9,7 @@ export interface DailyTask {
   done: boolean
 }
 
-interface DailyState {
+export interface DailyState {
   /** 任务所属日期 YYYY-MM-DD */
   date: string
   tasks: DailyTask[]
