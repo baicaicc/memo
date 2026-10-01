@@ -1,8 +1,11 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { createRng } from '@/core/rng'
+import { formatDate } from '@/core/date'
+import { pickFocusGame } from '@/core/progress'
 import { games, type GameId } from '@/games/registry'
 import { loadJSON, saveJSON, STORAGE_KEYS } from './persist'
+import { useStatsStore } from './stats'
 
 export interface DailyTask {
   gameId: GameId
@@ -18,19 +21,13 @@ export interface DailyState {
   streak: number
 }
 
-export function formatDate(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
+export { formatDate }
 
-function generateTasks(dateStr: string): DailyTask[] {
+/** 第一个任务固定为当天最弱的游戏（MEMO-22），其余两个按日期种子随机 */
+function generateTasks(dateStr: string, focus: GameId): DailyTask[] {
   const rng = createRng(`daily:${dateStr}`)
-  return rng
-    .shuffle(games.map((g) => g.id))
-    .slice(0, 3)
-    .map((gameId) => ({ gameId, done: false }))
+  const rest = rng.shuffle(games.map((g) => g.id).filter((id) => id !== focus))
+  return [focus, ...rest.slice(0, 2)].map((gameId) => ({ gameId, done: false }))
 }
 
 export const useDailyStore = defineStore('daily', () => {
@@ -45,12 +42,14 @@ export const useDailyStore = defineStore('daily', () => {
 
   watch(state, (v) => saveJSON(STORAGE_KEYS.daily, v), { deep: true })
 
-  /** 确保任务属于今天；日期变化时重新生成 3 个任务 */
+  const stats = useStatsStore()
+
+  /** 确保任务属于今天；日期变化时按当前档案重新生成 3 个任务 */
   function ensureToday(now: Date = new Date()): void {
     const today = formatDate(now)
     if (state.value.date === today) return
     state.value.date = today
-    state.value.tasks = generateTasks(today)
+    state.value.tasks = generateTasks(today, pickFocusGame(stats.records, today))
   }
 
   /**
