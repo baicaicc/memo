@@ -4,6 +4,7 @@ import type { GameId } from '@/games/registry'
 import { useStatsStore } from '@/stores/stats'
 import { useDailyStore } from '@/stores/daily'
 import { useResultStore } from '@/stores/result'
+import { useSyncStore } from '@/stores/sync'
 
 export type SessionPhase = 'ready' | 'showing' | 'recall' | 'finished'
 
@@ -53,6 +54,7 @@ export function useGameSession(
   const stats = useStatsStore()
   const daily = useDailyStore()
   const resultStore = useResultStore()
+  const sync = useSyncStore()
 
   const phase = ref<SessionPhase>('ready')
   const level = ref(options.initialLevel ?? 1)
@@ -84,6 +86,8 @@ export function useGameSession(
       detail,
     })
     daily.recordPlay(gameId)
+    // 后台上传云端存档，失败不影响结算
+    void sync.sync()
     resultStore.setResult({
       gameId,
       score: finalScore,

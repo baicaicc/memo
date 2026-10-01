@@ -8,6 +8,7 @@ import AppButton from '@/components/AppButton.vue'
 import AppCard from '@/components/AppCard.vue'
 import PageContainer from '@/components/PageContainer.vue'
 import RadarChart from '@/components/RadarChart.vue'
+import CloudCard from '@/components/CloudCard.vue'
 import TopBar from '@/components/TopBar.vue'
 
 const router = useRouter()
@@ -43,6 +44,7 @@ function barHeight(score: number, max: number): string {
     <div v-if="!hasData" class="empty">
       <p>还没有记录，去玩一局吧</p>
       <AppButton @click="router.push('/')">去首页</AppButton>
+      <CloudCard class="empty-cloud" />
     </div>
 
     <div v-else class="body">
@@ -55,6 +57,8 @@ function barHeight(score: number, max: number): string {
       <AppCard class="radar-card">
         <RadarChart :values="stats.radar" />
       </AppCard>
+
+      <CloudCard />
 
       <AppCard v-for="c in cards" :key="c.meta.id" class="game-card">
         <div class="game-head">
@@ -213,5 +217,10 @@ function barHeight(score: number, max: number): string {
   gap: 16px;
   padding: 80px 0;
   color: var(--color-text-dim);
+}
+.empty-cloud {
+  width: 100%;
+  margin-top: 24px;
+  color: var(--color-text);
 }
 </style>

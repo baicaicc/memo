@@ -19,4 +19,5 @@ export const STORAGE_KEYS = {
   stats: 'memo:stats',
   daily: 'memo:daily',
   result: 'memo:result',
+  sync: 'memo:sync',
 } as const
