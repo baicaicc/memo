@@ -14,6 +14,20 @@ export interface GameSessionOptions {
   initialLevel?: number
 }
 
+/**
+ * 一局的答题明细：session 自动记录通用字段，各游戏经 finish(…, extra) 追加自己的字段。
+ * 随成绩写入历史并同步到云端（MEMO-6），供后续 AI 教练分析（MEMO-7）。
+ */
+export interface SessionDetail {
+  seed: string
+  /** 是否来自挑战链接 */
+  challenge: boolean
+  errors: number
+  /** 从进入游戏页到结算的时长（毫秒） */
+  durationMs: number
+  [key: string]: unknown
+}
+
 export interface GameSession {
   phase: Ref<SessionPhase>
   level: Ref<number>
@@ -26,9 +40,9 @@ export interface GameSession {
   addError(): void
   /**
    * 结束本局：写入 stats 纪录、勾选每日任务、写入 result store，
-   * 然后跳转 /result。不传参数则取当前 score/level。
+   * 然后跳转 /result。不传参数则取当前 score/level；extra 为游戏特有的明细字段。
    */
-  finish(score?: number, level?: number): Promise<void>
+  finish(score?: number, level?: number, extra?: Record<string, unknown>): Promise<void>
 }
 
 export function useGameSession(
@@ -46,15 +60,28 @@ export function useGameSession(
   const errors = ref(0)
   const seed =
     options.seed ?? `${gameId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+  const startedAt = performance.now()
 
-  async function finish(finalScore = score.value, finalLevel = level.value) {
+  async function finish(
+    finalScore = score.value,
+    finalLevel = level.value,
+    extra: Record<string, unknown> = {},
+  ) {
     if (phase.value === 'finished') return
     phase.value = 'finished'
     score.value = finalScore
     level.value = finalLevel
+    const detail: SessionDetail = {
+      seed,
+      challenge: options.seed !== undefined,
+      errors: errors.value,
+      durationMs: Math.round(performance.now() - startedAt),
+      ...extra,
+    }
     const outcome = stats.recordResult(gameId, {
       score: finalScore,
       level: finalLevel,
+      detail,
     })
     daily.recordPlay(gameId)
     resultStore.setResult({
@@ -64,6 +91,7 @@ export function useGameSession(
       isBestScore: outcome.isBestScore,
       isBestLevel: outcome.isBestLevel,
       seed,
+      detail,
       at: Date.now(),
     })
     await router.push('/result')

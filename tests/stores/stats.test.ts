@@ -21,15 +21,15 @@ describe('stores/stats', () => {
     expect(rec.bestLevel).toBe(3)
   })
 
-  it('history 最多保留最近 30 局且新的在前', () => {
+  it('history 最多保留最近 200 局且新的在前', () => {
     const stats = useStatsStore()
-    for (let i = 1; i <= 35; i++) {
+    for (let i = 1; i <= 205; i++) {
       stats.recordResult('corsi', { score: i, level: 1 })
     }
     const rec = stats.getRecord('corsi')
-    expect(rec.history.length).toBe(30)
-    expect(rec.history[0].score).toBe(35)
-    expect(rec.history[29].score).toBe(6)
+    expect(rec.history.length).toBe(200)
+    expect(rec.history[0].score).toBe(205)
+    expect(rec.history[199].score).toBe(6)
   })
 
   it('雷达按最佳等级/maxLevel 归一化到 0–100，脑力指数为各维度平均', () => {

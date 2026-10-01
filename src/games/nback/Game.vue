@@ -60,6 +60,8 @@ const currentN = ref(session.level.value)
 const roundNum = ref(0)
 const demotions = ref(0)
 const maxN = ref(session.level.value)
+/** 每轮的 N 与判定，作为答题明细上报 */
+const roundLog: { n: number; dPrime: number; correctRate: number }[] = []
 const stimuli = ref<Stimulus[]>([])
 const pressed = ref<boolean[]>([])
 /** 当前播放到的拍索引，-1 表示未在播放 */
@@ -259,6 +261,11 @@ async function endRound(token: number) {
   const n = currentN.value
   const j = judgeRound(stimuli.value, pressed.value, n)
   maxN.value = Math.max(maxN.value, n)
+  roundLog.push({
+    n,
+    dPrime: Math.round(j.dPrime * 100) / 100,
+    correctRate: Math.round(j.correctRate * 100) / 100,
+  })
   const outcome = roundOutcome(j.dPrime)
   if (outcome === 'down') demotions.value += 1
   const next = nextN(j.dPrime, n)
@@ -281,7 +288,7 @@ async function finishGame() {
   cancelTimers()
   activeCell.value = -1
   play('finish')
-  await session.finish(session.score.value, maxN.value)
+  await session.finish(session.score.value, maxN.value, { rounds: roundLog })
 }
 
 function goBack() {
