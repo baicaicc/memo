@@ -6,7 +6,8 @@ import { loadJSON, saveJSON, STORAGE_KEYS } from './persist'
 export interface HistoryEntry {
   score: number
   level: number
-  detail?: unknown
+  /** 答题明细，见 core/session 的 SessionDetail；早期纪录可能缺失 */
+  detail?: Record<string, unknown>
   /** 毫秒时间戳 */
   at: number
 }
@@ -14,14 +15,14 @@ export interface HistoryEntry {
 export interface GameRecord {
   bestScore: number
   bestLevel: number
-  /** 最近最多 30 局，新的在前 */
+  /** 最近最多 200 局，新的在前 */
   history: HistoryEntry[]
 }
 
 export interface RecordResultInput {
   score: number
   level: number
-  detail?: unknown
+  detail?: Record<string, unknown>
 }
 
 export interface RecordResultOutcome {
@@ -29,7 +30,7 @@ export interface RecordResultOutcome {
   isBestLevel: boolean
 }
 
-const HISTORY_LIMIT = 30
+const HISTORY_LIMIT = 200
 
 type StatsState = Record<string, GameRecord>
 

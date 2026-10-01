@@ -48,6 +48,8 @@ const pickedId = ref<string | null>(null)
 const feedback = ref<'right' | 'wrong' | null>(null)
 const locked = ref(false)
 const remainingMs = ref(TOTAL_MS)
+const answered = ref(0)
+const correct = ref(0)
 
 const levelColors = computed(() => colorsForLevel(level.value))
 const inkHex = computed(() =>
@@ -95,7 +97,9 @@ function answer(id: string) {
   pickedId.value = id
   const result = scoreAnswer(trial.value.inkColor, id)
   session.addScore(result.delta)
-  if (!result.isRight) session.addError()
+  answered.value += 1
+  if (result.isRight) correct.value += 1
+  else session.addError()
   feedback.value = result.isRight ? 'right' : 'wrong'
   play(result.isRight ? 'tap' : 'wrong')
   feedbackTimer = setTimeout(nextTrial, FEEDBACK_MS)
@@ -106,7 +110,10 @@ async function endGame() {
   if (feedbackTimer !== undefined) clearTimeout(feedbackTimer)
   timer.stop()
   play('finish')
-  await session.finish()
+  await session.finish(undefined, undefined, {
+    answered: answered.value,
+    correct: correct.value,
+  })
 }
 
 onMounted(() => {

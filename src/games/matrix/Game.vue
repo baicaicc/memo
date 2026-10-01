@@ -54,6 +54,8 @@ const targets = ref<number[]>([])
 const picked = ref<number[]>([])
 const mistakes = ref(0)
 const failures = ref(0)
+const roundsWon = ref(0)
+const roundsLost = ref(0)
 const counting = ref(false)
 const countdown = ref(3)
 const showLeft = ref(1)
@@ -140,6 +142,7 @@ function tapCell(i: number) {
     if (verdict.value.completed) {
       session.addScore(roundBonus(staircase.level))
       staircase.onSuccess()
+      roundsWon.value += 1
       roundMessage.value = '找齐了，干得漂亮！'
       play('levelup')
       settleRound()
@@ -152,6 +155,7 @@ function tapCell(i: number) {
     mistakes.value += 1
     if (mistakes.value >= MAX_MISTAKES_PER_ROUND) {
       staircase.onFailure()
+      roundsLost.value += 1
       failures.value = staircase.failures
       roundMessage.value = staircase.shouldStop
         ? '本局结束'
@@ -167,7 +171,10 @@ function settleRound() {
   roundTimer = window.setTimeout(() => {
     if (staircase.shouldStop) {
       play('finish')
-      void session.finish(score.value, staircase.level)
+      void session.finish(score.value, staircase.level, {
+        roundsWon: roundsWon.value,
+        roundsLost: roundsLost.value,
+      })
     } else startRound()
   }, ROUND_RESULT_MS)
 }

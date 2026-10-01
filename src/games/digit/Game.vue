@@ -8,8 +8,6 @@ import { createStaircase } from '@/core/staircase'
 import { createTimer } from '@/core/timer'
 import { onVisibilityChange } from '@/wechat/compat'
 import { play } from '@/audio/sfx'
-import { useStatsStore } from '@/stores/stats'
-import { useResultStore } from '@/stores/result'
 import PageContainer from '@/components/PageContainer.vue'
 import TopBar from '@/components/TopBar.vue'
 import AppButton from '@/components/AppButton.vue'
@@ -41,9 +39,6 @@ const session = useGameSession(
     : {},
 )
 const { phase, score, errors } = session
-
-const stats = useStatsStore()
-const resultStore = useResultStore()
 
 const staircase = createStaircase({
   initialLevel: session.level.value,
@@ -156,17 +151,10 @@ function pressConfirm() {
 async function endGame() {
   cancelAnimationFrame(rafId)
   play('finish')
-  const done = session.finish(score.value, peakLevel.value)
-  // session.finish 不透传 detail，这里把 maxSpan 补进刚写入的纪录与结算
-  const rec = stats.getRecord(GAME_ID)
-  if (rec.history[0])
-    rec.history[0] = { ...rec.history[0], detail: { maxSpan: maxSpan.value } }
-  if (resultStore.lastResult)
-    resultStore.lastResult = {
-      ...resultStore.lastResult,
-      detail: { maxSpan: maxSpan.value },
-    }
-  await done
+  await session.finish(score.value, peakLevel.value, {
+    maxSpan: maxSpan.value,
+    rounds: round.value,
+  })
 }
 
 const offVisibility = onVisibilityChange(({ hidden }) => {

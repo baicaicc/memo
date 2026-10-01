@@ -59,6 +59,8 @@ const selected = ref<number | null>(null)
 const judged = ref<PlacementVerdict | null>(null)
 const bestLevel = ref(staircase.level)
 const failures = ref(0)
+const roundsWon = ref(0)
+const roundsLost = ref(0)
 const counting = ref(false)
 const countdown = ref(3)
 const showLeft = ref(1)
@@ -166,10 +168,12 @@ function judgeRound() {
   if (verdict.allCorrect) {
     session.addScore(roundBonus(roundLevel))
     bestLevel.value = Math.max(bestLevel.value, roundLevel)
+    roundsWon.value += 1
     staircase.onSuccess()
     roundMessage.value = '全部归位，干得漂亮！'
   } else {
     staircase.onFailure()
+    roundsLost.value += 1
     failures.value = staircase.failures
     roundMessage.value = staircase.shouldStop
       ? '本局结束'
@@ -184,7 +188,10 @@ function settleRound() {
   roundTimer = window.setTimeout(() => {
     if (staircase.shouldStop) {
       play('finish')
-      void session.finish(score.value, bestLevel.value)
+      void session.finish(score.value, bestLevel.value, {
+        roundsWon: roundsWon.value,
+        roundsLost: roundsLost.value,
+      })
     } else startRound()
   }, ROUND_RESULT_MS)
 }

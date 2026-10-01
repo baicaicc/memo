@@ -18,11 +18,13 @@ const hasData = computed(() =>
   games.some((g) => stats.getRecord(g.id).history.length > 0),
 )
 
+const TREND_LIMIT = 30
+
 const cards = computed(() =>
   games.map((meta) => {
     const rec = stats.getRecord(meta.id)
-    // history 新的在前，翻转为左旧右新展示趋势
-    const trend = [...rec.history].reverse()
+    // history 新的在前；趋势只画最近 30 局，翻转为左旧右新
+    const trend = rec.history.slice(0, TREND_LIMIT).reverse()
     const max = trend.reduce((m, h) => Math.max(m, h.score), 0)
     return { meta, rec, trend, max }
   }),

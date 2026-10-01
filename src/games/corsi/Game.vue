@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { createRng } from '@/core/rng'
 import { createStaircase } from '@/core/staircase'
 import { useGameSession } from '@/core/session'
-import { useStatsStore } from '@/stores/stats'
 import { getGame } from '@/games/registry'
 import { onVisibilityChange } from '@/wechat/compat'
 import { play } from '@/audio/sfx'
@@ -26,7 +25,6 @@ import {
 const meta = getGame('corsi')!
 const route = useRoute()
 const router = useRouter()
-const stats = useStatsStore()
 
 function firstQuery(v: unknown): string | undefined {
   const s = Array.isArray(v) ? v[0] : v
@@ -235,10 +233,7 @@ async function finishGame() {
   cancelTimers()
   activeBlock.value = -1
   play('finish')
-  await session.finish(session.score.value, maxPassedLevel.value)
-  // session.finish 不支持 detail，这里把全程最高通过长度补写进刚生成的纪录
-  const latest = stats.getRecord('corsi').history[0]
-  if (latest) latest.detail = { maxSpan: maxSpan.value }
+  await session.finish(session.score.value, maxPassedLevel.value, { maxSpan: maxSpan.value })
 }
 
 function goBack() {

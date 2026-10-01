@@ -11,7 +11,7 @@ export interface GameResult {
   isBestLevel: boolean
   /** 本局使用的种子，用于挑战链接复现同一题 */
   seed: string
-  detail?: unknown
+  detail?: Record<string, unknown>
   at: number
 }
 
