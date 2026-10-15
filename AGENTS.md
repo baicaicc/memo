@@ -1,4 +1,4 @@
-跨项目协作遵循 [dev-conventions 当前有效主分支](https://github.com/baicaicc/dev-conventions/blob/main/CONSTITUTION.md)。本机正本为 `/Users/kidsbox/workspace/dev-conventions/CONSTITUTION.md`；先读该正本，并按其入口读取同仓 `ADAPTATIONS.md`。本项目例外见文末。
+跨项目协作遵循 [dev-conventions 当前有效主分支](https://github.com/baicaicc/dev-conventions/blob/main/CONSTITUTION.md)。公约由全局入口 `~/.agents/AGENTS.md` 载入；按其指引读取适用的当前补丁。本项目例外见文末。
 
 # memo 工程宪法
 
@@ -13,7 +13,7 @@
 ## 项目边界
 
 - **管**：六个记忆游戏（matrix/corsi/digit/stroop/nback/paired）与后续新游戏、阶梯难度引擎、本地档案（雷达图/每日任务/streak）、云端存档、挑战链接、部署流水线。
-- **不管**：umbrella 外壳（未接入，需要时单独立卡评估）、其他产品项目。
+- **不管**：其他产品项目。
 - 需求账本 = 本仓 GitHub Issues，编号回执 `MEMO-<n>`。
 
 ## 活跃主线
